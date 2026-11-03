@@ -18,10 +18,12 @@ ADRs registram o contexto, a escolha e as consequências de mudanças importante
 
 O workflow roda em Pull Requests destinados à `main` e em pushes na `main`. Ele faz checkout sem manter credenciais, concede apenas `contents: read` e chama a Action publicada `rodri-oliveira-dev/adr-guard@v1` com `command: check`.
 
-O [Pull Request de demonstração](https://github.com/rodri-oliveira-dev/adr-guard-demo/pulls) contém dois commits reais:
+O [Pull Request de demonstração](https://github.com/rodri-oliveira-dev/adr-guard-demo/pull/1) contém dois commits reais:
 
 1. remoção da seção obrigatória `Consequences` de um ADR, gerando `ADR005` e código de saída `1`;
 2. restauração da seção com benefícios e custos operacionais, gerando código de saída `0`.
+
+Veja a [execução que falhou](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/runs/41699840621) e a [execução bem-sucedida](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/runs/41700021294).
 
 O workflow não usa segredos, `continue-on-error` nem um comando artificial para provocar a falha. O resultado do job é o próprio código de saída do ADR Guard. O log bruto, a anotação no arquivo e o resumo da etapa apresentam as evidências oferecidas pela Action.
 
@@ -43,7 +45,7 @@ O segundo commit restaura `## Consequences` e descreve ganhos e custos da comuni
 
 ## Validação aprovada
 
-Depois da correção, os três arquivos atendem às mesmas regras determinísticas e a nova execução termina com código `0`. O histórico do workflow pode ser aberto pelo badge; os links diretos das execuções são registrados no repositório depois que o GitHub as conclui.
+Depois da correção, os três arquivos atendem às mesmas regras determinísticas e a [nova execução termina com sucesso](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/runs/41700021294). A [execução anterior com falha](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/runs/41699840621) permanece no histórico do Pull Request.
 
 ## Executar localmente
 

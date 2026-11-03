@@ -18,10 +18,12 @@ ADRs preserve the context, selected option, and consequences behind important ch
 
 The workflow runs on pull requests targeting `main` and on pushes to `main`. It checks out the repository without persisting credentials, grants only `contents: read`, and invokes the published `rodri-oliveira-dev/adr-guard@v1` Action with `command: check`.
 
-The [demonstration pull request](https://github.com/rodri-oliveira-dev/adr-guard-demo/pulls) follows two real commits:
+The [demonstration pull request](https://github.com/rodri-oliveira-dev/adr-guard-demo/pull/1) follows two real commits:
 
 1. remove the required `Consequences` section from one ADR, producing `ADR005` and exit code `1`;
 2. restore the section with balanced operational trade-offs, producing exit code `0`.
+
+See the [failed workflow run](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/runs/41699840621) and the [successful workflow run](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/runs/41700021294).
 
 The workflow does not use secrets, `continue-on-error`, or an artificial failing command. ADR Guard's exit code is the job result. GitHub's raw log, file annotation, and step summary provide the diagnostic evidence supported by the Action.
 
@@ -43,7 +45,7 @@ The second commit restores `## Consequences` and explains both the benefits and 
 
 ## Passing validation
 
-After the correction, all three files satisfy the same deterministic rules and the rerun exits with code `0`. The workflow history is available from the badge above; direct links to the demonstration runs are recorded in the repository after GitHub completes them.
+After the correction, all three files satisfy the same deterministic rules and the [rerun exits successfully](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/runs/41700021294). The earlier [failed run](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/runs/41699840621) remains in the pull request history.
 
 ## Run locally
 
