@@ -14,4 +14,4 @@ Publish versioned domain events through a durable message broker for non-immedia
 
 ## Consequences
 
-Services can absorb traffic spikes and fail independently for deferred work. The system also becomes eventually consistent and requires correlation identifiers, retry and dead-letter policies, schema evolution discipline, and observability across asynchronous boundaries.
+Services can absorb traffic spikes and recover deferred work independently, reducing synchronous coupling. The system becomes eventually consistent, so the team must operate correlation tracing, idempotent consumers, bounded retries, dead-letter handling, event-schema compatibility, and monitoring for processing delays.
