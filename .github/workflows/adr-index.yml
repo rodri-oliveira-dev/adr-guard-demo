@@ -1,0 +1,34 @@
+name: ADR index
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  index:
+    name: Generate ADR catalog
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Generate ADR index
+        uses: rodri-oliveira-dev/adr-guard@ef132507ff3fda22db2128354086cee53b832fb1 # v1.11.0
+        with:
+          version: 1.11.0
+          path: docs/adr
+          command: index
+
+      - name: Show generated catalog
+        shell: bash
+        run: |
+          cat docs/adr/README.md
+          {
+            echo '## Generated ADR catalog'
+            echo
+            cat docs/adr/README.md
+          } >> "$GITHUB_STEP_SUMMARY"

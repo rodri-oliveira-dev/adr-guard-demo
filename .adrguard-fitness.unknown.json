@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "1.0",
+  "rules": [
+    {
+      "id": "conditional-domain-reference",
+      "decision": {
+        "stableId": "ADR-4",
+        "path": "docs/adr/0004-protect-the-domain-boundary.md"
+      },
+      "scope": {
+        "projects": [
+          "examples/drift-unknown/Domain/Domain.csproj",
+          "src/AdrGuardDemo.Infrastructure/AdrGuardDemo.Infrastructure.csproj"
+        ]
+      },
+      "check": {
+        "type": "forbid-project-reference",
+        "from": "examples/drift-unknown/Domain/Domain.csproj",
+        "to": "src/AdrGuardDemo.Infrastructure/AdrGuardDemo.Infrastructure.csproj"
+      },
+      "evidence": {
+        "source": "dotnet-project-reference"
+      },
+      "failure": {
+        "severity": "error",
+        "onInconclusive": "unknown"
+      },
+      "gate": true
+    }
+  ]
+}

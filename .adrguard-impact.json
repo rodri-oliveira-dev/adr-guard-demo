@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "1.0",
+  "mappings": [
+    {
+      "decision": {
+        "stableId": "ADR-1",
+        "path": "docs/adr/0001-use-postgresql-for-transactional-data.md"
+      },
+      "patterns": [
+        "src/AdrGuardDemo.Infrastructure/Persistence/**"
+      ],
+      "relationship": "implements",
+      "reason": "The persistence adapter implements the PostgreSQL system-of-record decision."
+    },
+    {
+      "decision": {
+        "stableId": "ADR-2",
+        "path": "docs/adr/0002-use-asynchronous-service-communication.md"
+      },
+      "patterns": [
+        "src/AdrGuardDemo.Application/Messaging/**"
+      ],
+      "relationship": "implements",
+      "reason": "The messaging code implements the asynchronous service-communication decision."
+    },
+    {
+      "decision": {
+        "stableId": "ADR-3",
+        "path": "docs/adr/0003-use-redis-for-distributed-cache.md"
+      },
+      "patterns": [
+        "src/AdrGuardDemo.Infrastructure/Caching/**"
+      ],
+      "relationship": "implements",
+      "reason": "The cache adapter implements the Redis cache-aside decision."
+    },
+    {
+      "decision": {
+        "stableId": "ADR-4",
+        "path": "docs/adr/0004-protect-the-domain-boundary.md"
+      },
+      "patterns": [
+        "src/AdrGuardDemo.Domain/**"
+      ],
+      "relationship": "governs",
+      "reason": "The domain boundary decision governs the dependency-free domain project."
+    }
+  ]
+}

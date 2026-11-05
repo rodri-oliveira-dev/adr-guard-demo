@@ -1,0 +1,28 @@
+name: ADR architecture drift
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: Enforce ADR-backed boundary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Verify architecture fitness rule
+        uses: rodri-oliveira-dev/adr-guard@ef132507ff3fda22db2128354086cee53b832fb1 # v1.11.0
+        with:
+          version: 1.11.0
+          command: drift
+          drift-rules: .adrguard-fitness.json
+          drift-policy: enforce
