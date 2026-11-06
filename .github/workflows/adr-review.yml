@@ -1,0 +1,35 @@
+name: Optional ADR AI review
+
+on:
+  workflow_dispatch:
+    inputs:
+      adr:
+        description: Repository-relative ADR Markdown file
+        required: true
+        default: docs/adr/0004-protect-the-domain-boundary.md
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    name: Advisory AI review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Review selected ADR with OpenAI
+        uses: rodri-oliveira-dev/adr-guard@ef132507ff3fda22db2128354086cee53b832fb1 # v1.11.0
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        with:
+          version: 1.11.0
+          command: review
+          review-target: ${{ inputs.adr }}
+          provider: openai
+          model: gpt-5
+          policy: advisory

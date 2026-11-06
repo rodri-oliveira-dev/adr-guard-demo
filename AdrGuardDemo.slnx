@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/AdrGuardDemo.Application/AdrGuardDemo.Application.csproj" />
+  <Project Path="src/AdrGuardDemo.Domain/AdrGuardDemo.Domain.csproj" />
+  <Project Path="src/AdrGuardDemo.Infrastructure/AdrGuardDemo.Infrastructure.csproj" />
+</Solution>

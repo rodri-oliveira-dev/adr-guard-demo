@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "1.0",
+  "rules": [
+    {
+      "id": "domain-no-infrastructure-reference",
+      "decision": {
+        "stableId": "ADR-4",
+        "path": "docs/adr/0004-protect-the-domain-boundary.md"
+      },
+      "scope": {
+        "projects": [
+          "src/AdrGuardDemo.Domain/AdrGuardDemo.Domain.csproj",
+          "src/AdrGuardDemo.Infrastructure/AdrGuardDemo.Infrastructure.csproj"
+        ]
+      },
+      "check": {
+        "type": "forbid-project-reference",
+        "from": "src/AdrGuardDemo.Domain/AdrGuardDemo.Domain.csproj",
+        "to": "src/AdrGuardDemo.Infrastructure/AdrGuardDemo.Infrastructure.csproj"
+      },
+      "evidence": {
+        "source": "dotnet-project-reference"
+      },
+      "failure": {
+        "severity": "error",
+        "onInconclusive": "unknown"
+      },
+      "gate": true
+    }
+  ]
+}

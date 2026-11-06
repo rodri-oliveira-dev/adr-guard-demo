@@ -1,0 +1,27 @@
+name: ADR architecture impact
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  impact:
+    name: Advisory ADR impact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with comparison history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Analyze architecture impact
+        uses: rodri-oliveira-dev/adr-guard@ef132507ff3fda22db2128354086cee53b832fb1 # v1.11.0
+        with:
+          version: 1.11.0
+          command: impact
+          base-ref: ${{ github.event.pull_request.base.sha }}
+          impact-map: .adrguard-impact.json
