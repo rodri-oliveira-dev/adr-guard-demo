@@ -1,0 +1,98 @@
+name: ADR relationships export (Align)
+
+on:
+  pull_request:
+    paths:
+      - "docs/adr/**"
+      - "docs/align-integration*.md"
+      - ".config/dotnet-tools.json"
+      - ".github/workflows/adr-align-export.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/adr/**"
+      - "docs/align-integration*.md"
+      - ".config/dotnet-tools.json"
+      - ".github/workflows/adr-align-export.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    name: Export and verify ADR relationships
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore ADR Guard v1.12.0
+        run: dotnet tool restore
+
+      - name: Validate ADRs
+        run: dotnet tool run adr-guard check docs/adr
+
+      - name: Export with the released CLI
+        run: dotnet tool run adr-guard export relationships docs/adr
+
+      - name: Verify Align integration contract
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          export = Path(".adr-guard/relationships.json")
+          data = json.loads(export.read_text(encoding="utf-8"))
+          assert data["schemaVersion"] == "1.0", "Unexpected schema version"
+          assert not data["issues"], f"ADR validation issues: {data['issues']}"
+
+          prefix = "docs/adr/"
+          paths = {
+              "old": prefix + "0005-correlate-requests-with-application-logs.md",
+              "new": prefix + "0006-use-distributed-tracing-for-cross-service-requests.md",
+              "dependency": prefix + "0007-propagate-correlation-context-across-asynchronous-boundaries.md",
+          }
+          adrs = {adr["path"]: adr for adr in data["adrs"]}
+          assert len(adrs) >= 7, "Expected original four ADRs plus three integration ADRs"
+          assert adrs[paths["old"]]["status"] == "Superseded"
+          assert adrs[paths["new"]]["status"] == "Accepted"
+          assert adrs[paths["dependency"]]["status"] == "Accepted"
+          assert all(path.startswith(prefix) for path in adrs), "Paths must be repository-relative"
+
+          edges = {
+              (edge["sourcePath"], edge["type"], edge["targetPath"])
+              for edge in data["relationships"]
+              if edge["resolution"] == "resolved"
+          }
+          assert (paths["old"], "superseded-by", paths["new"]) in edges
+          assert (paths["new"], "supersedes", paths["old"]) in edges
+          assert (paths["new"], "depends-on", paths["dependency"]) in edges
+          assert len(data["relationships"]) == 3, "Unexpected relationship declarations"
+          assert len(edges) == 3, "Every demonstration relationship must be resolved"
+          print("Export verified: reciprocal supersession, active dependency, no issues.")
+          PY
+
+      - name: Verify deterministic export
+        shell: bash
+        run: |
+          sha256sum .adr-guard/relationships.json > "$RUNNER_TEMP/relationships.sha256"
+          dotnet tool run adr-guard export relationships docs/adr
+          sha256sum --check "$RUNNER_TEMP/relationships.sha256"
+
+      - name: Upload real export for Align
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: adr-guard-align-relationships
+          path: .adr-guard/relationships.json
+          if-no-files-found: error
+          retention-days: 7

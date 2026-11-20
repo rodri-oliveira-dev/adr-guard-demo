@@ -15,8 +15,13 @@ Este repositório pequeno demonstra a GitHub Action publicada do ADR Guard sem s
 | `impact` | Relaciona mudanças do Git a mapeamentos explícitos entre código e ADRs. | Relatório consultivo; mudanças afetadas ou sem mapeamento ainda retornam `0`. | [`adr-impact.yml`](.github/workflows/adr-impact.yml) |
 | `drift` | Verifica regras arquiteturais restritas, ligadas a ADRs e sustentadas por evidência concreta. | Pass, violation ou unknown; este exemplo impõe apenas uma violação estática comprovada. | [`adr-drift.yml`](.github/workflows/adr-drift.yml) |
 | `review` | Solicita a um provedor de IA configurado uma revisão limitada do ADR. | Opcional e consultivo; falha do provedor ou de transporte não aparece como revisão limpa. | [`adr-review.yml`](.github/workflows/adr-review.yml) |
+| `export relationships` | Exporta metadados dos ADRs, substituições, dependências e diagnósticos em JSON determinístico para o Align. | Artefato gerado pelo ADR Guard v1.12.0 com verificações do contrato. | [`adr-align-export.yml`](.github/workflows/adr-align-export.yml) |
 
 `check`, `impact` e `drift` respondem a perguntas diferentes. Um documento válido pode descrever uma arquitetura que o código deixou de seguir; um arquivo alterado pode afetar um ADR sem violá-lo; e uma regra inconclusiva resulta em `unknown`, nunca em aprovação.
+
+## Integração ADR Guard + Align
+
+O [exemplo de integração](docs/align-integration.pt-BR.md) adiciona os ADRs 0005–0007 sem alterar as quatro decisões originais. Ele demonstra uma substituição declarada nos dois sentidos, uma dependência e uma exportação JSON real da v1.12.0 que o Align pode importar. O [workflow de exportação](.github/workflows/adr-align-export.yml) valida o grafo, verifica o determinismo e disponibiliza o artefato gerado para testes independentes.
 
 ## Histórico da validação original
 
@@ -128,9 +133,9 @@ Os workflows não mascaram esses códigos. Decisões afetadas e mudanças sem ma
 
 ## Compatibilidade publicada e segurança
 
-Os workflows adicionados usam o commit da Action `ef132507ff3fda22db2128354086cee53b832fb1` e selecionam explicitamente o runtime `1.11.0`. Esse commit corresponde à tag publicada `v1.11.0`. Em 5 de novembro de 2026, os manifestos coordenados `ghcr.io/rodri-oliveira-dev/adr-guard:1.11.0` e `:1` apontavam para o mesmo digest multiplataforma, `sha256:fd2ee26943490b6484a1c55d826b3c8527dcf48ac17a79b0abad51b9ddd90624`. Os exemplos usam somente contratos já publicados antes ou junto dessa versão: review (`v1.1.6+`), impact (`v1.5.0+`) e drift na Action (`v1.10.0+`). A geração MADR não é usada.
+Os workflows complementares anteriores usam o commit da Action `ef132507ff3fda22db2128354086cee53b832fb1` e selecionam explicitamente o runtime `1.11.0`. Esse commit corresponde à tag publicada `v1.11.0`. Em 5 de novembro de 2026, os manifestos coordenados `ghcr.io/rodri-oliveira-dev/adr-guard:1.11.0` e `:1` apontavam para o mesmo digest multiplataforma, `sha256:fd2ee26943490b6484a1c55d826b3c8527dcf48ac17a79b0abad51b9ddd90624`. Os exemplos usam somente contratos já publicados antes ou junto dessa versão: review (`v1.1.6+`), impact (`v1.5.0+`) e drift na Action (`v1.10.0+`). A geração MADR não é usada.
 
-Todos os workflows novos concedem apenas `contents: read`, fixam Actions de terceiros por SHA completo, desativam a persistência de credenciais no checkout e evitam escrita no repositório, artifacts automáticos e `pull_request_target`. Somente impact baixa o histórico completo, pois seu contrato exige a base comum. O workflow de validação original permanece inalterado para preservar o histórico da demonstração e o comportamento da referência móvel v1.
+Todos os workflows concedem apenas `contents: read`, fixam Actions de terceiros por SHA completo, desativam a persistência de credenciais no checkout e evitam escrita no repositório e `pull_request_target`. O workflow do Align fixa o CLI na versão v1.12.0 pelo manifesto de ferramentas e publica o JSON gerado como artefato; os outros exemplos não publicam artefatos. Somente impact baixa o histórico completo, pois exige a base comum. O workflow de validação original permanece inalterado.
 
 ## Documentação oficial
 
