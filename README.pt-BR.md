@@ -23,6 +23,8 @@ Este repositório pequeno demonstra a GitHub Action publicada do ADR Guard sem s
 
 O [exemplo de integração](docs/align-integration.pt-BR.md) adiciona os ADRs 0005–0007 sem alterar as quatro decisões originais. Ele demonstra uma substituição declarada nos dois sentidos, uma dependência e uma exportação JSON real da v1.12.0 que o Align pode importar. O [workflow de exportação](.github/workflows/adr-align-export.yml) valida o grafo, verifica o determinismo e disponibiliza o artefato gerado para testes independentes.
 
+Três [cenários negativos](examples/relationships/README.md) são validados automaticamente com exportações reais; um [roteiro interativo de ponta a ponta](scripts/verify-align-e2e.sh) permite verificar o consumidor Align manualmente. Consulte o guia de integração para distinguir os testes do produtor no CI da importação confirmada por uma pessoa no Align.
+
 ## Histórico da validação original
 
 O workflow original não foi alterado. Ele roda em Pull Requests destinados à `main` e em pushes na `main`, faz checkout sem persistir credenciais, concede apenas `contents: read` e chama `rodri-oliveira-dev/adr-guard@v1` com `command: check`.

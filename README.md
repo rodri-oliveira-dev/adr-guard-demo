@@ -23,6 +23,8 @@ This small repository demonstrates the published ADR Guard GitHub Action without
 
 The [integration example](docs/align-integration.md) adds ADRs 0005–0007 without changing the original four decisions. It demonstrates a reciprocal supersession declaration, a dependency, and a real v1.12.0 JSON export that Align can import. The [export workflow](.github/workflows/adr-align-export.yml) validates the graph, checks deterministic output, and uploads the generated artifact for independent testing.
 
+Three [negative scenarios](examples/relationships/README.md) are verified automatically using real exports; an [interactive Align E2E script](scripts/verify-align-e2e.sh) is available for manual consumer verification. See the integration guide for the distinction between producer CI and Align's human-confirmed import.
+
 ## Original validation history
 
 The original workflow is unchanged. It runs on pull requests targeting `main` and pushes to `main`, checks out without persisting credentials, grants only `contents: read`, and invokes `rodri-oliveira-dev/adr-guard@v1` with `command: check`.

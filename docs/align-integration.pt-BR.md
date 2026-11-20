@@ -50,6 +50,24 @@ align ask "Which approach should we use to trace cross-service requests?"
 
 Primeiro, `align connect docs` importa os documentos. Depois, `align connect adr-guard` lê por padrão `.adr-guard/relationships.json` e associa os relacionamentos pelos caminhos relativos ao repositório. Espera-se que o Align registre **ADR 0006 substitui ADR 0005**, marque ADR 0005 como substituído e priorize ADR 0006 nas respostas. Uma segunda execução do importador não deve criar duplicidade. O Align pode solicitar confirmação interativa e um grafo local inicializado.
 
+## Cenários adicionais de validação
+
+Os [ADRs isolados de exemplo](../examples/relationships/README.md) demonstram uma **referência inexistente** (`ADR007`), uma **substituição circular** (`ADR010` nos dois ADRs) e uma **exportação com erros de validação** (status inválido). Eles não ficam na pasta principal `docs/adr`.
+
+O CI executa `python3 scripts/verify-relationship-scenarios.py`. Para cada cenário, a CLI publicada deve retornar `1` com `check`, mas retornar `0` com `export relationships`, registrando os problemas em `issues`. O script verifica caminhos relativos à raiz, resolução dos relacionamentos e determinismo byte a byte. Os três JSONs reais são publicados no artefato `adr-guard-invalid-scenarios`.
+
+## Teste interativo ponta a ponta com Align
+
+Em um clone Git, com a CLI do Align que inclua o [PR #692](https://github.com/aligndottech/align-cli/pull/692) e um grafo local inicializado (`align local start`, se necessário), execute:
+
+```bash
+bash scripts/verify-align-e2e.sh
+```
+
+O roteiro executa o ADR Guard v1.12.0, importa os ADRs por `align connect docs`, importa os relacionamentos duas vezes por `align connect adr-guard`, consulta o estado do grafo e executa `align ask`. Verifique no resultado **uma** substituição confirmada (ADR 0006 substituindo 0005), nenhuma duplicação, o ADR antigo como substituído, o novo como decisão atual e a dependência sem ser importada como substituição. O comando `align ask` pode exigir um modelo de IA configurado.
+
+**Esse teste ponta a ponta é interativo e não é marcado como aprovado no CI.** O Align exige um terminal real antes de registrar a substituição confirmada por uma pessoa; o workflow automatizado respeita essa restrição.
+
 ## Evidências no CI
 
 O [workflow de exportação](../.github/workflows/adr-align-export.yml) usa a CLI publicada para validar, exportar, conferir o grafo esperado e verificar o determinismo byte a byte com duas execuções. Cada execução bem-sucedida disponibiliza o **JSON produzido pela ferramenta** como artefato `adr-guard-align-relationships` na aba Actions. Não há fixture JSON mantida manualmente.

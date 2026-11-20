@@ -5,6 +5,9 @@ on:
     paths:
       - "docs/adr/**"
       - "docs/align-integration*.md"
+      - "examples/relationships/**"
+      - "scripts/verify-relationship-scenarios.py"
+      - "scripts/verify-align-e2e.sh"
       - ".config/dotnet-tools.json"
       - ".github/workflows/adr-align-export.yml"
   push:
@@ -13,6 +16,9 @@ on:
     paths:
       - "docs/adr/**"
       - "docs/align-integration*.md"
+      - "examples/relationships/**"
+      - "scripts/verify-relationship-scenarios.py"
+      - "scripts/verify-align-e2e.sh"
       - ".config/dotnet-tools.json"
       - ".github/workflows/adr-align-export.yml"
   workflow_dispatch:
@@ -88,6 +94,17 @@ jobs:
           sha256sum .adr-guard/relationships.json > "$RUNNER_TEMP/relationships.sha256"
           dotnet tool run adr-guard export relationships docs/adr
           sha256sum --check "$RUNNER_TEMP/relationships.sha256"
+
+      - name: Verify invalid ADR relationship scenarios
+        run: python3 scripts/verify-relationship-scenarios.py
+
+      - name: Upload invalid scenario exports
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: adr-guard-invalid-scenarios
+          path: .adr-guard/scenarios/*.json
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Upload real export for Align
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
