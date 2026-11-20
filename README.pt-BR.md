@@ -15,8 +15,15 @@ Este repositório pequeno demonstra a GitHub Action publicada do ADR Guard sem s
 | `impact` | Relaciona mudanças do Git a mapeamentos explícitos entre código e ADRs. | Relatório consultivo; mudanças afetadas ou sem mapeamento ainda retornam `0`. | [`adr-impact.yml`](.github/workflows/adr-impact.yml) |
 | `drift` | Verifica regras arquiteturais restritas, ligadas a ADRs e sustentadas por evidência concreta. | Pass, violation ou unknown; este exemplo impõe apenas uma violação estática comprovada. | [`adr-drift.yml`](.github/workflows/adr-drift.yml) |
 | `review` | Solicita a um provedor de IA configurado uma revisão limitada do ADR. | Opcional e consultivo; falha do provedor ou de transporte não aparece como revisão limpa. | [`adr-review.yml`](.github/workflows/adr-review.yml) |
+| `export relationships` | Exporta metadados dos ADRs, substituições, dependências e diagnósticos em JSON determinístico para o Align. | Artefato gerado pelo ADR Guard v1.12.0 com verificações do contrato. | [`adr-align-export.yml`](.github/workflows/adr-align-export.yml) |
 
 `check`, `impact` e `drift` respondem a perguntas diferentes. Um documento válido pode descrever uma arquitetura que o código deixou de seguir; um arquivo alterado pode afetar um ADR sem violá-lo; e uma regra inconclusiva resulta em `unknown`, nunca em aprovação.
+
+## Integração ADR Guard + Align
+
+O [exemplo de integração](docs/align-integration.pt-BR.md) adiciona os ADRs 0005–0007 sem alterar as quatro decisões originais. Ele demonstra uma substituição declarada nos dois sentidos, uma dependência e uma exportação JSON real da v1.12.0 que o Align pode importar. O [workflow de exportação](.github/workflows/adr-align-export.yml) valida o grafo, verifica o determinismo e disponibiliza o artefato gerado para testes independentes.
+
+Três [cenários negativos](examples/relationships/README.md) são validados automaticamente com exportações reais; um [roteiro interativo de ponta a ponta](scripts/verify-align-e2e.sh) permite verificar o consumidor Align manualmente. Consulte o guia de integração para distinguir os testes do produtor no CI da importação confirmada por uma pessoa no Align.
 
 ## Histórico da validação original
 
@@ -46,12 +53,12 @@ Os comandos abaixo usam a imagem publicada exata. O Docker precisa estar em exec
 ```bash
 docker run --rm --read-only --network=none --cap-drop=ALL \
   --security-opt=no-new-privileges -v "$PWD:/workspace:ro" -w /workspace \
-  ghcr.io/rodri-oliveira-dev/adr-guard:1.11.0 check docs/adr
+  ghcr.io/rodri-oliveira-dev/adr-guard:1.12.0 check docs/adr
 
 dotnet build AdrGuardDemo.slnx --configuration Release
 ```
 
-Com a ferramenta instalada, o comando equivalente é `adr-guard check docs/adr`, usando o pacote `RodriOliveira.AdrGuard` na versão `1.11.0`.
+Com a ferramenta instalada, o comando equivalente é `adr-guard check docs/adr`, usando o pacote `RodriOliveira.AdrGuard` na versão `1.12.0`.
 
 ### Gerar o catálogo de ADRs
 
@@ -128,9 +135,9 @@ Os workflows não mascaram esses códigos. Decisões afetadas e mudanças sem ma
 
 ## Compatibilidade publicada e segurança
 
-Os workflows adicionados usam o commit da Action `ef132507ff3fda22db2128354086cee53b832fb1` e selecionam explicitamente o runtime `1.11.0`. Esse commit corresponde à tag publicada `v1.11.0`. Em 5 de novembro de 2026, os manifestos coordenados `ghcr.io/rodri-oliveira-dev/adr-guard:1.11.0` e `:1` apontavam para o mesmo digest multiplataforma, `sha256:fd2ee26943490b6484a1c55d826b3c8527dcf48ac17a79b0abad51b9ddd90624`. Os exemplos usam somente contratos já publicados antes ou junto dessa versão: review (`v1.1.6+`), impact (`v1.5.0+`) e drift na Action (`v1.10.0+`). A geração MADR não é usada.
+Os quatro workflows complementares da GitHub Action (`index`, `impact`, `drift` e `review`) fixam o commit publicado da Action `ccce4e411ee036c5764f3837d4174f4426b076a7` (`v1.12.0`) e selecionam explicitamente a imagem de execução `1.12.0`. O exemplo local com Docker usa `ghcr.io/rodri-oliveira-dev/adr-guard:1.12.0`. O workflow específico do Align restaura o pacote CLI `RodriOliveira.AdrGuard` na versão `1.12.0` pelo manifesto fixado de ferramentas .NET. O subcomando `export relationships` está disponível na CLI, **não** é um valor aceito no campo `command` da GitHub Action. Os contratos de review, impact e drift foram mantidos. O servidor MCP e a extensão VS Code têm versões independentes e não são utilizados neste demo.
 
-Todos os workflows novos concedem apenas `contents: read`, fixam Actions de terceiros por SHA completo, desativam a persistência de credenciais no checkout e evitam escrita no repositório, artifacts automáticos e `pull_request_target`. Somente impact baixa o histórico completo, pois seu contrato exige a base comum. O workflow de validação original permanece inalterado para preservar o histórico da demonstração e o comportamento da referência móvel v1.
+Todos os workflows concedem apenas `contents: read`, fixam Actions de terceiros por SHA completo, desativam a persistência de credenciais no checkout e evitam escrita no repositório e `pull_request_target`. O workflow do Align fixa o CLI na versão v1.12.0 pelo manifesto de ferramentas e publica o JSON gerado como artefato; os outros exemplos não publicam artefatos. Somente impact baixa o histórico completo, pois exige a base comum. O workflow de validação original permanece inalterado.
 
 ## Documentação oficial
 
@@ -139,7 +146,7 @@ Todos os workflows novos concedem apenas `contents: read`, fixam Actions de terc
 - [Análise de impacto arquitetural](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/guides/architecture-impact-analysis.pt-BR.md)
 - [Drift arquitetural e evidências de fitness](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/guides/architectural-drift.pt-BR.md)
 - [Referência da CLI](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/cli-reference.pt-BR.md)
-- [Release ADR Guard v1.11.0](https://github.com/rodri-oliveira-dev/adr-guard/releases/tag/v1.11.0)
+- [Release ADR Guard v1.12.0](https://github.com/rodri-oliveira-dev/adr-guard/releases/tag/v1.12.0)
 
 ## Licença
 
