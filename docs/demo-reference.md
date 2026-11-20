@@ -1,0 +1,132 @@
+# ADR Guard Demo: detailed examples and CI
+
+[Back to the README](../README.md) · [Português (Brasil)](demo-reference.pt-BR.md)
+
+Run the commands below **from the repository root**. This reference preserves the original demo's history, example commands, exit-code semantics, published-version and security details. For an introductory overview, use the main README.
+
+## Original validation history
+
+The original workflow is unchanged. It runs on pull requests targeting `main` and pushes to `main`, checks out without persisting credentials, grants only `contents: read`, and invokes `rodri-oliveira-dev/adr-guard@v1` with `command: check`.
+
+The [original demonstration pull request](https://github.com/rodri-oliveira-dev/adr-guard-demo/pull/1) preserves two real commits:
+
+1. removing the required `Consequences` section from ADR 0002, which produced `ADR005` and exit code `1`;
+2. restoring the section with balanced operational trade-offs, which produced exit code `0`.
+
+The [failed workflow run](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/runs/41699840621) and [successful workflow run](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/runs/41700021294) remain the historical evidence. There is no artificial failure command or `continue-on-error`; the ADR Guard exit is the job result.
+
+## Example ADRs and code
+
+The original ADRs remain intact:
+
+- [Use PostgreSQL for transactional data](../docs/adr/0001-use-postgresql-for-transactional-data.md)
+- [Use asynchronous communication between services](../docs/adr/0002-use-asynchronous-service-communication.md)
+- [Use Redis for distributed caching](../docs/adr/0003-use-redis-for-distributed-cache.md)
+
+[Protect the domain boundary](../docs/adr/0004-protect-the-domain-boundary.md) connects the drift example to the small [.NET solution](../AdrGuardDemo.slnx). Infrastructure and application projects depend on the domain; the domain has no infrastructure reference. The source folders also give the impact map concrete PostgreSQL, messaging, Redis, and domain-boundary paths.
+
+## Run the deterministic examples locally
+
+The examples below use the exact published container. Docker must be running, and impact additionally needs local Git history. Building the `.slnx` file requires the .NET 10 SDK; its projects target .NET 8.
+
+```bash
+docker run --rm --read-only --network=none --cap-drop=ALL \
+  --security-opt=no-new-privileges -v "$PWD:/workspace:ro" -w /workspace \
+  ghcr.io/rodri-oliveira-dev/adr-guard:1.12.0 check docs/adr
+
+dotnet build AdrGuardDemo.slnx --configuration Release
+```
+
+The equivalent installed-tool command is `adr-guard check docs/adr` after installing `RodriOliveira.AdrGuard` version `1.12.0`.
+
+### Generate the ADR catalog
+
+Run the **ADR index** workflow manually from the Actions tab. It has read-only repository permission, creates no commit, and uploads no artifact. The generated [`docs/adr/README.md`](../docs/adr/README.md) is printed to the log and copied to the step summary.
+
+To regenerate it locally with an installed tool:
+
+```bash
+adr-guard index docs/adr
+git diff -- docs/adr/README.md
+```
+
+`index` validates before writing and preserves validation exit `1`, usage exit `2`, and operational exit `3`.
+
+### Inspect change impact
+
+The pull-request workflow checks out complete history because ADR Guard must calculate a merge base. [`.adrguard-impact.json`](../.adrguard-impact.json) maps source areas to stable ADR identities. Changes under the mapped `Persistence`, `Messaging`, `Caching`, and `Domain` paths appear as affected decisions; changes to files such as this README remain visible as unmapped coverage gaps. Both are advisory and return `0` after a complete analysis.
+
+```bash
+adr-guard impact . --base-ref origin/main --map .adrguard-impact.json
+```
+
+The command is read-only and does not fetch. Missing or disconnected history, an invalid manifest, or a Git failure returns `3`. Open a pull request that changes a mapped source file and an unrelated file to see both categories in the Actions step summary.
+
+### Reproduce drift outcomes
+
+[`.adrguard-fitness.json`](../.adrguard-fitness.json) prohibits the domain project from referencing infrastructure and links that rule to ADR 0004. The rule is `gate: true`, uses the built-in deterministic `forbid-project-reference` check, and is therefore safe to run with `enforce`.
+
+Pass (`0`):
+
+```bash
+adr-guard drift . --rules .adrguard-fitness.json --policy enforce
+```
+
+New deterministic violation (`4`):
+
+```bash
+dotnet add src/AdrGuardDemo.Domain/AdrGuardDemo.Domain.csproj reference \
+  src/AdrGuardDemo.Infrastructure/AdrGuardDemo.Infrastructure.csproj
+adr-guard drift . --rules .adrguard-fitness.json --policy enforce
+dotnet remove src/AdrGuardDemo.Domain/AdrGuardDemo.Domain.csproj reference \
+  src/AdrGuardDemo.Infrastructure/AdrGuardDemo.Infrastructure.csproj
+```
+
+Unknown (`3`), caused by a conditional MSBuild reference that ADR Guard deliberately does not evaluate:
+
+```bash
+adr-guard drift . --rules .adrguard-fitness.unknown.json --policy advisory
+```
+
+The checked-in workflow uses only the conclusive primary rule. It does not use a baseline or external evidence. Missing, conditional, or ambiguous evidence remains `unknown`; absence of evidence is never compliance.
+
+## Optional AI review
+
+Run **Optional ADR AI review** manually with a repository-relative ADR path. The workflow explicitly selects provider `openai`, model `gpt-5`, and policy `advisory`. It requires one repository secret:
+
+- `OPENAI_API_KEY`: an API key with the minimum provider permissions and spending limits appropriate for this demo.
+
+No credential is stored as an Action input or example value. The workflow does not run on pull requests, does not use `pull_request_target`, and has no write permission. The Action mounts the checkout read-only and forwards only the selected provider credential to the review container. The chosen ADR content is sent to the provider, so do not select documents containing secrets or data that policy forbids sharing.
+
+Provider use can incur charges and is nondeterministic. Model availability, rate limits, network failures, and provider output can change. Findings remain advisory and require human review; a missing secret or provider failure returns operational exit `3`. The deterministic demonstrations do not require this secret and continue to work independently.
+
+## Exit codes and interpretation
+
+| Code | Meaning in these demonstrations |
+| --- | --- |
+| `0` | Successful validation/index, completed advisory impact/review, conclusive drift pass, or advisory drift violation. |
+| `1` | Deterministic ADR validation failure. |
+| `2` | Invalid command, option, path, or configuration. |
+| `3` | Operational/provider failure or inconclusive drift (`unknown`). |
+| `4` | Explicit deterministic policy failure, including a new gate-enabled static drift violation. |
+
+The workflows do not mask these codes. Impact candidates and unmapped changes are not compliance violations. AI findings are not policy failures under `advisory`.
+
+## Published-version compatibility and security
+
+The four supplemental GitHub Action workflows (`index`, `impact`, `drift`, and `review`) pin the published `v1.12.0` Action commit `ccce4e411ee036c5764f3837d4174f4426b076a7` and explicitly select runtime image `1.12.0`. The local Docker example uses `ghcr.io/rodri-oliveira-dev/adr-guard:1.12.0`. The separate Align export workflow restores the CLI package `RodriOliveira.AdrGuard` at `1.12.0` through the pinned .NET tool manifest. The `export relationships` subcommand is available through the CLI, **not** an accepted GitHub Action `command` value. Review, impact, and drift retain their established contracts. The MCP server and VS Code extension have independent release versions and are not used by this demo.
+
+All workflows use `contents: read`, pin third-party Actions to full commit SHAs, disable persisted checkout credentials, and avoid repository writes and `pull_request_target`. The Align export workflow pins the CLI to v1.12.0 via the tool manifest and uploads its generated JSON as an artifact; the other examples do not upload artifacts. Only impact fetches full history, because it requires the merge base. The original validation workflow remains unchanged to preserve its demonstration history and moving-v1 behavior.
+
+## Official documentation
+
+- [GitHub Action consumer guide](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/github-action.md)
+- [AI review security and usage](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/github-action-review.md)
+- [Architecture impact analysis](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/guides/architecture-impact-analysis.md)
+- [Architectural drift and fitness evidence](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/guides/architectural-drift.md)
+- [CLI reference](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/cli-reference.md)
+- [ADR Guard v1.12.0 release](https://github.com/rodri-oliveira-dev/adr-guard/releases/tag/v1.12.0)
+
+## License
+
+This demonstration is available under the [MIT License](../LICENSE).

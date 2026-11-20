@@ -3,151 +3,76 @@
 [English](README.md) · [ADR Guard](https://github.com/rodri-oliveira-dev/adr-guard) · [GitHub Marketplace](https://github.com/marketplace/actions/adr-guard-architecture-decision-validator)
 
 [![Validação de ADRs](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/workflows/adr-validation.yml/badge.svg?branch=main)](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/workflows/adr-validation.yml)
+[![Desvio arquitetural](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/workflows/adr-drift.yml/badge.svg?branch=main)](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/workflows/adr-drift.yml)
+[![Exportação de relacionamentos](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/workflows/adr-align-export.yml/badge.svg?branch=main)](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/workflows/adr-align-export.yml)
 
-Este repositório pequeno demonstra a GitHub Action publicada do ADR Guard sem substituir julgamento arquitetural por automação. O exemplo original de validação determinística foi preservado e agora convive com demonstrações isoladas de geração de catálogo, análise de impacto, drift arquitetural e revisão opcional por IA.
+Repositório prático para explorar **registros de decisões arquiteturais (ADRs)** com a CLI e a GitHub Action do [ADR Guard](https://github.com/rodri-oliveira-dev/adr-guard). Veja como validar e catalogar decisões, relacioná-las ao código, identificar desvios arquiteturais e exportar relacionamentos para o Align.
 
-## O papel de cada demonstração
+**Comece por aqui:** execute a validação e a exportação com poucos comandos. Depois, acompanhe a substituição de uma decisão, dos arquivos Markdown até o JSON. Os exemplos determinísticos não exigem modelo de IA nem chave de API.
 
-| Funcionalidade | Para que serve | Resultado | Workflow |
-| --- | --- | --- | --- |
-| `check` | Valida estrutura, nomes, status, relacionamentos e conteúdo obrigatório dos ADRs. | Gate determinístico; ADR inválido retorna `1`. | [`adr-validation.yml`](.github/workflows/adr-validation.yml) |
-| `index` | Gera um catálogo Markdown determinístico depois de validar os ADRs. | Escreve apenas no checkout efêmero do runner e mostra o catálogo no log e no resumo. | [`adr-index.yml`](.github/workflows/adr-index.yml) |
-| `impact` | Relaciona mudanças do Git a mapeamentos explícitos entre código e ADRs. | Relatório consultivo; mudanças afetadas ou sem mapeamento ainda retornam `0`. | [`adr-impact.yml`](.github/workflows/adr-impact.yml) |
-| `drift` | Verifica regras arquiteturais restritas, ligadas a ADRs e sustentadas por evidência concreta. | Pass, violation ou unknown; este exemplo impõe apenas uma violação estática comprovada. | [`adr-drift.yml`](.github/workflows/adr-drift.yml) |
-| `review` | Solicita a um provedor de IA configurado uma revisão limitada do ADR. | Opcional e consultivo; falha do provedor ou de transporte não aparece como revisão limpa. | [`adr-review.yml`](.github/workflows/adr-review.yml) |
-| `export relationships` | Exporta metadados dos ADRs, substituições, dependências e diagnósticos em JSON determinístico para o Align. | Artefato gerado pelo ADR Guard v1.12.0 com verificações do contrato. | [`adr-align-export.yml`](.github/workflows/adr-align-export.yml) |
+## Início rápido
 
-`check`, `impact` e `drift` respondem a perguntas diferentes. Um documento válido pode descrever uma arquitetura que o código deixou de seguir; um arquivo alterado pode afetar um ADR sem violá-lo; e uma regra inconclusiva resulta em `unknown`, nunca em aprovação.
-
-## Integração ADR Guard + Align
-
-O [exemplo de integração](docs/align-integration.pt-BR.md) adiciona os ADRs 0005–0007 sem alterar as quatro decisões originais. Ele demonstra uma substituição declarada nos dois sentidos, uma dependência e uma exportação JSON real da v1.12.0 que o Align pode importar. O [workflow de exportação](.github/workflows/adr-align-export.yml) valida o grafo, verifica o determinismo e disponibiliza o artefato gerado para testes independentes.
-
-Três [cenários negativos](examples/relationships/README.md) são validados automaticamente com exportações reais; um [roteiro interativo de ponta a ponta](scripts/verify-align-e2e.sh) permite verificar o consumidor Align manualmente. Consulte o guia de integração para distinguir os testes do produtor no CI da importação confirmada por uma pessoa no Align.
-
-## Histórico da validação original
-
-O workflow original não foi alterado. Ele roda em Pull Requests destinados à `main` e em pushes na `main`, faz checkout sem persistir credenciais, concede apenas `contents: read` e chama `rodri-oliveira-dev/adr-guard@v1` com `command: check`.
-
-O [Pull Request original da demonstração](https://github.com/rodri-oliveira-dev/adr-guard-demo/pull/1) preserva dois commits reais:
-
-1. remoção da seção obrigatória `Consequences` do ADR 0002, gerando `ADR005` e código de saída `1`;
-2. restauração da seção com benefícios e custos operacionais, gerando código de saída `0`.
-
-A [execução que falhou](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/runs/41699840621) e a [execução bem-sucedida](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions/runs/41700021294) continuam sendo a evidência histórica. Não há comando artificial de falha nem `continue-on-error`: o resultado do job é o código de saída do ADR Guard.
-
-## ADRs e código do exemplo
-
-Os ADRs originais permanecem intactos:
-
-- [PostgreSQL para dados transacionais](docs/adr/0001-use-postgresql-for-transactional-data.md)
-- [Comunicação assíncrona entre serviços](docs/adr/0002-use-asynchronous-service-communication.md)
-- [Redis como cache distribuído](docs/adr/0003-use-redis-for-distributed-cache.md)
-
-O ADR [Proteger o limite do domínio](docs/adr/0004-protect-the-domain-boundary.md) conecta o exemplo de drift à pequena [solução .NET](AdrGuardDemo.slnx). Os projetos de infraestrutura e aplicação dependem do domínio; o domínio não referencia infraestrutura. As pastas de código também dão ao mapa de impacto caminhos concretos de PostgreSQL, mensageria, Redis e limite do domínio.
-
-## Executar os exemplos determinísticos localmente
-
-Os comandos abaixo usam a imagem publicada exata. O Docker precisa estar em execução; a análise de impacto também precisa do histórico Git local. A compilação do arquivo `.slnx` requer o SDK do .NET 10; os projetos têm .NET 8 como alvo.
+**Pré-requisitos:** Git e **SDK do .NET 10**. O manifesto de ferramentas instala o ADR Guard CLI **v1.12.0**. Execute na raiz do repositório:
 
 ```bash
-docker run --rm --read-only --network=none --cap-drop=ALL \
-  --security-opt=no-new-privileges -v "$PWD:/workspace:ro" -w /workspace \
-  ghcr.io/rodri-oliveira-dev/adr-guard:1.12.0 check docs/adr
-
-dotnet build AdrGuardDemo.slnx --configuration Release
+git clone https://github.com/rodri-oliveira-dev/adr-guard-demo.git
+cd adr-guard-demo
+dotnet tool restore
+dotnet tool run adr-guard check docs/adr
+dotnet tool run adr-guard export relationships docs/adr
 ```
 
-Com a ferramenta instalada, o comando equivalente é `adr-guard check docs/adr`, usando o pacote `RodriOliveira.AdrGuard` na versão `1.12.0`.
+O exemplo principal possui **7 ADRs válidos e 3 declarações de relacionamento** (duas declarações recíprocas de substituição e uma dependência). O arquivo gerado, `.adr-guard/relationships.json`, contém `adrs`, `relationships` e `issues` (esperado: vazio). O arquivo é ignorado pelo Git. Exportação bem-sucedida significa que o JSON foi escrito; a validação é feita separadamente pelo `check`.
 
-### Gerar o catálogo de ADRs
+Sem .NET instalado? Explore os [workflows do GitHub Actions](https://github.com/rodri-oliveira-dev/adr-guard-demo/actions) e seus registros de execução.
 
-Execute manualmente o workflow **ADR index** na aba Actions. Ele tem permissão de leitura, não cria commit e não publica artifact. O arquivo gerado [`docs/adr/README.md`](docs/adr/README.md) aparece no log e no resumo da etapa.
+## Funcionalidades e exemplos
 
-Para recriar o catálogo localmente com a ferramenta instalada:
+| Funcionalidade | Exemplo prático | Como executar ou verificar |
+| --- | --- | --- |
+| **Validação** (`check`) | [Sete ADRs](docs/adr/README.md), com estrutura, status e relacionamentos | [Workflow de validação](.github/workflows/adr-validation.yml) |
+| **Catálogo** (`index`) | [Índice de ADRs](docs/adr/README.md) | [Workflow de geração manual](.github/workflows/adr-index.yml) |
+| **Impacto** (`impact`) | [Mapeamento ADR–código](.adrguard-impact.json) e [arquivo de código](src/AdrGuardDemo.Infrastructure/Persistence/PostgresOrderRepository.cs) | [Workflow de impacto em PRs](.github/workflows/adr-impact.yml) |
+| **Desvio arquitetural** (`drift`) | [Regra de arquitetura](.adrguard-fitness.json) e [projeto de domínio](src/AdrGuardDemo.Domain/AdrGuardDemo.Domain.csproj) | [Workflow com validação obrigatória](.github/workflows/adr-drift.yml) |
+| **Revisão com IA** (`review`) | [ADR 0004](docs/adr/0004-protect-the-domain-boundary.md) | [Workflow manual de revisão](.github/workflows/adr-review.yml); requer o segredo `OPENAI_API_KEY` |
+| **Relacionamentos em JSON** (`export relationships`) | [Guia ADR Guard + Align](docs/align-integration.pt-BR.md) | [Workflow de exportação e contrato](.github/workflows/adr-align-export.yml) |
+
+Consulte a [referência avançada dos exemplos e do CI](docs/demo-reference.pt-BR.md) para comandos completos, códigos de saída, histórico da validação e detalhes de segurança.
+
+## ADR Guard + Align: exemplo real de integração
+
+Três ADRs relacionados demonstram o ciclo de vida de uma decisão:
+
+- **[ADR 0005](docs/adr/0005-correlate-requests-with-application-logs.md)**: decisão histórica baseada apenas em logs, com status **Superseded** (substituída).
+- **[ADR 0006](docs/adr/0006-use-distributed-tracing-for-cross-service-requests.md)**: substituta aceita, que declara `supersedes` (substitui) o ADR 0005.
+- **[ADR 0007](docs/adr/0007-propagate-correlation-context-across-asynchronous-boundaries.md)**: pré-requisito indicado por `depends-on` (depende de).
+
+As duas declarações recíprocas entre os ADRs 0005 e 0006 devem resultar em **uma única substituição** confirmada no Align. A dependência aparece na exportação, mas **não** é importada como substituição.
+
+O [guia de integração](docs/align-integration.pt-BR.md) apresenta o contrato JSON, os comandos e o [roteiro interativo de ponta a ponta](scripts/verify-align-e2e.sh). **O GitHub Actions valida a exportação real do ADR Guard, não a importação interativa no Align**, que exige um grafo local e confirmação da pessoa no terminal.
+
+## Cenários válidos e inválidos
+
+| Cenário | O que demonstra | Exemplo |
+| --- | --- | --- |
+| Substituição e dependência válidas | Relacionamentos identificados, sem erros de validação | [ADRs 0005–0007](docs/adr/README.md) |
+| Referência inexistente | `ADR007` e destino nulo | [Dependência ausente](examples/relationships/unresolved/docs/adr/0001-use-external-delivery-queue.md) |
+| Substituição circular | `ADR010` nos dois ADRs; substituições inválidas são rejeitadas | [Exemplo circular](examples/relationships/cycle/docs/adr/0001-use-queue-a.md) |
+| Exportação com problemas | `check` falha, mas a exportação registra `issues` | [Exemplo de status inválido](examples/relationships/validation-issues/docs/adr/0001-unapproved-status.md) |
+
+Os exemplos inválidos ficam em `examples/relationships/`, **fora** de `docs/adr`, para preservar a validação principal. Para verificá-los localmente:
 
 ```bash
-adr-guard index docs/adr
-git diff -- docs/adr/README.md
+python3 scripts/verify-relationship-scenarios.py
 ```
 
-`index` valida antes de escrever e preserva os códigos `1` para falha de validação, `2` para uso inválido e `3` para falha operacional.
+Execute `dotnet tool restore` antes. O [guia dos cenários](examples/relationships/README.md) explica os resultados esperados, e o [workflow de exportação](.github/workflows/adr-align-export.yml) publica os arquivos JSON válidos e de diagnóstico.
 
-### Inspecionar o impacto de mudanças
+## Documentação complementar
 
-O workflow de Pull Request baixa o histórico completo porque o ADR Guard precisa calcular a base comum. O arquivo [`.adrguard-impact.json`](.adrguard-impact.json) associa áreas do código a identidades estáveis dos ADRs. Alterações nas pastas mapeadas `Persistence`, `Messaging`, `Caching` e `Domain` aparecem como decisões afetadas; mudanças em arquivos como este README permanecem visíveis como lacunas de mapeamento. Depois de uma análise completa, ambos os casos são consultivos e retornam `0`.
-
-```bash
-adr-guard impact . --base-ref origin/main --map .adrguard-impact.json
-```
-
-O comando é somente leitura e não executa `fetch`. Histórico ausente ou desconectado, manifesto inválido ou falha do Git retorna `3`. Para ver as duas categorias no resumo do GitHub Actions, abra um PR que altere um arquivo de código mapeado e outro arquivo sem mapeamento.
-
-### Reproduzir os resultados de drift
-
-O arquivo [`.adrguard-fitness.json`](.adrguard-fitness.json) proíbe o projeto de domínio de referenciar infraestrutura e liga essa regra ao ADR 0004. A regra usa `gate: true` e a verificação determinística nativa `forbid-project-reference`, portanto pode rodar com política `enforce`.
-
-Conforme (`0`):
-
-```bash
-adr-guard drift . --rules .adrguard-fitness.json --policy enforce
-```
-
-Nova violação determinística (`4`):
-
-```bash
-dotnet add src/AdrGuardDemo.Domain/AdrGuardDemo.Domain.csproj reference \
-  src/AdrGuardDemo.Infrastructure/AdrGuardDemo.Infrastructure.csproj
-adr-guard drift . --rules .adrguard-fitness.json --policy enforce
-dotnet remove src/AdrGuardDemo.Domain/AdrGuardDemo.Domain.csproj reference \
-  src/AdrGuardDemo.Infrastructure/AdrGuardDemo.Infrastructure.csproj
-```
-
-Inconclusivo (`3`), causado por uma referência condicional do MSBuild que o ADR Guard deliberadamente não avalia:
-
-```bash
-adr-guard drift . --rules .adrguard-fitness.unknown.json --policy advisory
-```
-
-O workflow versionado usa somente a regra principal, que é conclusiva. Não há baseline nem evidência externa. Evidência ausente, condicional ou ambígua continua sendo `unknown`; falta de evidência nunca é conformidade.
-
-## Revisão opcional por IA
-
-Execute manualmente **Optional ADR AI review** informando o caminho de um ADR dentro do repositório. O workflow seleciona explicitamente o provider `openai`, o modelo `gpt-5` e a política `advisory`. Ele exige um único secret do repositório:
-
-- `OPENAI_API_KEY`: chave de API com as menores permissões e limites de gasto adequados à demonstração.
-
-Nenhuma credencial é armazenada como input da Action ou como valor de exemplo. O workflow não roda em Pull Requests, não usa `pull_request_target` e não possui permissão de escrita. A Action monta o checkout como somente leitura e encaminha ao contêiner apenas a credencial do provider selecionado. O conteúdo do ADR escolhido é enviado ao provider; não selecione documentos com segredos ou dados que não possam ser compartilhados segundo as políticas aplicáveis.
-
-O uso do provider pode gerar custos e não é determinístico. Disponibilidade do modelo, limites de requisição, rede e respostas podem variar. Os achados são consultivos e exigem revisão humana; secret ausente ou falha do provider retorna `3`. As demonstrações determinísticas não usam esse secret e continuam independentes.
-
-## Códigos de saída e interpretação
-
-| Código | Significado nestas demonstrações |
-| --- | --- |
-| `0` | Validação/indexação concluída, impacto/revisão consultiva concluídos, drift conforme ou violação em modo consultivo. |
-| `1` | Falha na validação determinística de ADRs. |
-| `2` | Comando, opção, caminho ou configuração inválida. |
-| `3` | Falha operacional/do provider ou drift inconclusivo (`unknown`). |
-| `4` | Falha de política determinística explícita, incluindo nova violação estática com gate habilitado. |
-
-Os workflows não mascaram esses códigos. Decisões afetadas e mudanças sem mapeamento não são violações de conformidade. Achados da IA não são falhas de política em `advisory`.
-
-## Compatibilidade publicada e segurança
-
-Os quatro workflows complementares da GitHub Action (`index`, `impact`, `drift` e `review`) fixam o commit publicado da Action `ccce4e411ee036c5764f3837d4174f4426b076a7` (`v1.12.0`) e selecionam explicitamente a imagem de execução `1.12.0`. O exemplo local com Docker usa `ghcr.io/rodri-oliveira-dev/adr-guard:1.12.0`. O workflow específico do Align restaura o pacote CLI `RodriOliveira.AdrGuard` na versão `1.12.0` pelo manifesto fixado de ferramentas .NET. O subcomando `export relationships` está disponível na CLI, **não** é um valor aceito no campo `command` da GitHub Action. Os contratos de review, impact e drift foram mantidos. O servidor MCP e a extensão VS Code têm versões independentes e não são utilizados neste demo.
-
-Todos os workflows concedem apenas `contents: read`, fixam Actions de terceiros por SHA completo, desativam a persistência de credenciais no checkout e evitam escrita no repositório e `pull_request_target`. O workflow do Align fixa o CLI na versão v1.12.0 pelo manifesto de ferramentas e publica o JSON gerado como artefato; os outros exemplos não publicam artefatos. Somente impact baixa o histórico completo, pois exige a base comum. O workflow de validação original permanece inalterado.
-
-## Documentação oficial
-
-- [Guia da GitHub Action](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/github-action.pt-BR.md)
-- [Segurança e uso da revisão por IA](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/github-action-review.pt-BR.md)
-- [Análise de impacto arquitetural](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/guides/architecture-impact-analysis.pt-BR.md)
-- [Drift arquitetural e evidências de fitness](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/guides/architectural-drift.pt-BR.md)
-- [Referência da CLI](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/cli-reference.pt-BR.md)
+- [Exemplos detalhados, CI e segurança](docs/demo-reference.pt-BR.md)
+- [Integração ADR Guard + Align](docs/align-integration.pt-BR.md)
+- [Referência da CLI do ADR Guard](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/cli-reference.pt-BR.md)
 - [Release ADR Guard v1.12.0](https://github.com/rodri-oliveira-dev/adr-guard/releases/tag/v1.12.0)
 
-## Licença
-
-Esta demonstração está disponível sob a [Licença MIT](LICENSE).
+Este exemplo usa a [Licença MIT](LICENSE). Os diagnósticos do ADR Guard apoiam a revisão arquitetural, mas **não** substituem aprovação humana nem garantem conformidade.
