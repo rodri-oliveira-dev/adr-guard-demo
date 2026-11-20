@@ -51,12 +51,12 @@ The examples below use the exact published container. Docker must be running, an
 ```bash
 docker run --rm --read-only --network=none --cap-drop=ALL \
   --security-opt=no-new-privileges -v "$PWD:/workspace:ro" -w /workspace \
-  ghcr.io/rodri-oliveira-dev/adr-guard:1.11.0 check docs/adr
+  ghcr.io/rodri-oliveira-dev/adr-guard:1.12.0 check docs/adr
 
 dotnet build AdrGuardDemo.slnx --configuration Release
 ```
 
-The equivalent installed-tool command is `adr-guard check docs/adr` after installing `RodriOliveira.AdrGuard` version `1.11.0`.
+The equivalent installed-tool command is `adr-guard check docs/adr` after installing `RodriOliveira.AdrGuard` version `1.12.0`.
 
 ### Generate the ADR catalog
 
@@ -133,7 +133,7 @@ The workflows do not mask these codes. Impact candidates and unmapped changes ar
 
 ## Published-version compatibility and security
 
-The original supplemental workflows use Action source commit `ef132507ff3fda22db2128354086cee53b832fb1` and explicitly select runtime `1.11.0`. That commit is the published `v1.11.0` tag. On November 5, 2026, the coordinated `ghcr.io/rodri-oliveira-dev/adr-guard:1.11.0` and moving `:1` manifests resolved to the same multi-platform digest, `sha256:fd2ee26943490b6484a1c55d826b3c8527dcf48ac17a79b0abad51b9ddd90624`. The examples use only contracts already published before or with that release: review (`v1.1.6+`), impact (`v1.5.0+`), and Action drift (`v1.10.0+`). They do not use MADR generation.
+The four supplemental GitHub Action workflows (`index`, `impact`, `drift`, and `review`) pin the published `v1.12.0` Action commit `ccce4e411ee036c5764f3837d4174f4426b076a7` and explicitly select runtime image `1.12.0`. The local Docker example uses `ghcr.io/rodri-oliveira-dev/adr-guard:1.12.0`. The separate Align export workflow restores the CLI package `RodriOliveira.AdrGuard` at `1.12.0` through the pinned .NET tool manifest. The `export relationships` subcommand is available through the CLI, **not** an accepted GitHub Action `command` value. Review, impact, and drift retain their established contracts. The MCP server and VS Code extension have independent release versions and are not used by this demo.
 
 All workflows use `contents: read`, pin third-party Actions to full commit SHAs, disable persisted checkout credentials, and avoid repository writes and `pull_request_target`. The Align export workflow pins the CLI to v1.12.0 via the tool manifest and uploads its generated JSON as an artifact; the other examples do not upload artifacts. Only impact fetches full history, because it requires the merge base. The original validation workflow remains unchanged to preserve its demonstration history and moving-v1 behavior.
 
@@ -144,7 +144,7 @@ All workflows use `contents: read`, pin third-party Actions to full commit SHAs,
 - [Architecture impact analysis](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/guides/architecture-impact-analysis.md)
 - [Architectural drift and fitness evidence](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/guides/architectural-drift.md)
 - [CLI reference](https://github.com/rodri-oliveira-dev/adr-guard/blob/main/docs/cli-reference.md)
-- [ADR Guard v1.11.0 release](https://github.com/rodri-oliveira-dev/adr-guard/releases/tag/v1.11.0)
+- [ADR Guard v1.12.0 release](https://github.com/rodri-oliveira-dev/adr-guard/releases/tag/v1.12.0)
 
 ## License
 

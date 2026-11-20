@@ -17,9 +17,9 @@ jobs:
           persist-credentials: false
 
       - name: Generate ADR index
-        uses: rodri-oliveira-dev/adr-guard@ef132507ff3fda22db2128354086cee53b832fb1 # v1.11.0
+        uses: rodri-oliveira-dev/adr-guard@ccce4e411ee036c5764f3837d4174f4426b076a7 # v1.12.0
         with:
-          version: 1.11.0
+          version: 1.12.0
           path: docs/adr
           command: index
 
